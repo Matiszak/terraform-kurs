@@ -35,3 +35,22 @@ resource "azurerm_key_vault_secret" "passwords" {
   value        = local.passwords[count.index]
   key_vault_id = azurerm_key_vault.zad2.id
 }
+
+resource "azurerm_private_endpoint" "zad4" {
+  name                = "zad4kv-private-endpoint"
+  location            = data.azurerm_resource_group.default.location
+  resource_group_name = data.azurerm_resource_group.default.name
+  subnet_id           = module.zad2_network_dev.output.endpoint_subnet.id
+
+  private_service_connection {
+    name                           = "zad4kv-privateserviceconnection"
+    private_connection_resource_id = azurerm_key_vault.zad2.id
+    is_manual_connection           = false
+    subresource_names = [ "vault" ]
+  }
+
+  private_dns_zone_group {
+    name = "zad4kv-private-endpoint-zone-group"
+    private_dns_zone_ids = [ azurerm_private_dns_zone.zad6acr["keyvault"].id ]
+  }
+}
